@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>下拉刷新，上拉加载更多</title>
+	<style type="text/css">
+		html,body,header,div,main,p,span,ul,li{
+			 margin: 0; 
+			 padding: 0; 
+		}
+		#refreshContainer li{ 
+			background-color: #ccc; 
+			margin-bottom: 1px; 
+			padding: 20px 10px; 
+		}
+		/* 头部下拉刷新 */
+		.refreshText{ 
+			position: absolute; 
+			width: 100%; 
+			line-height: 50px; 
+			text-align: center; 
+			left: 0; 
+			top: 0; 
+		}
+		.refreshText img{
+			width: 20px;
+			height: 20px;
+		}
+
+		/* 底部上拉加载更多 */
+		.refreshText_bottom{ 
+			line-height: 50px; 
+			text-align: center; 
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<div class="refreshText"></div>
+		<ul id="refreshContainer">
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+			<li>4</li>
+			<li>5</li>
+			<li>6</li>
+			<li>7</li>
+			<li>8</li>
+			<li>9</li>
+			<li>10</li>
+			<li>11</li>
+			<li>12</li>
+			<li>13</li>
+			<li>14</li>
+			<li>15</li>
+			<li>16</li>
+			<li>17</li>
+			<li>18</li>
+			<li>19</li>
+			<li>20</li>
+		</ul>
+		<div class="refreshText_bottom"></div>
+	</main>
+
+<script type="text/javascript">
+	(function(window) {
+		// 下拉刷新功能
+		var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
+		
+		if(scrollTop == 0){
+			console.log('可以下拉刷新了');
+			console.log(document.body.scrollTop);
+			var _element = document.getElementById('refreshContainer'),
+			_refreshText = document.querySelector('.refreshText'),
+			_startPos = 0,
+			_transitionHeight = 0;
+
+			_element.addEventListener('touchstart', function(e) {
+				console.log('初始位置：', e.touches[0].pageY);
+				_startPos = e.touches[0].pageY;
+				_element.style.position = 'relative';
+				_element.style.transition = 'transform 0s';
+			}, false);
+			
+			_element.addEventListener('touchmove', function(e) {
+				console.log('当前位置：', e.touches[0].pageY);
+				_transitionHeight = e.touches[0].pageY - _startPos;
+				if (_transitionHeight > 0 && _transitionHeight < 55) {
+					_refreshText.innerText = '下拉刷新';
+					_element.style.transform = 'translateY('+_transitionHeight+'px)';
+					if (_transitionHeight > 40) {
+					_refreshText.innerText = '释放更新';
+					}
+				}				
+			}, false);
+			_element.addEventListener('touchend', function(e) {
+				if(_transitionHeight > 0 && _transitionHeight < 40){
+					_element.style.transition = 'transform 1s ease 0.1s';
+					_element.style.transform = 'translateY(0px)';
+				}
+				
+				if(_transitionHeight > 40){
+					_refreshText.innerHTML = '<img src="img/refresh.gif" alt="">';
+					_element.style.transition = 'transform 1s ease 1s';
+					_element.style.transform = 'translateY(0px)';
+				}
+			}, false);
+		}
+
+
+
+		// 上拉加载更多功能.................................................................
+		// 获取当前滚动条的位置 
+		function getScrollTop() {
+			var scrollTop = 0; 
+			if (document.documentElement && document.documentElement.scrollTop) { 
+				scrollTop = document.documentElement.scrollTop; 
+			} else if (document.body) { 
+				scrollTop = document.body.scrollTop; 
+			} 
+			return scrollTop; 
+		} 
+		// 获取当前可视范围的高度 
+		function getClientHeight() { 
+			var clientHeight = 0; 
+			if (document.body.clientHeight && document.documentElement.clientHeight) { 
+				clientHeight = Math.min(document.body.clientHeight, document.documentElement.clientHeight); 
+			}
+			else { 
+				clientHeight = Math.max(document.body.clientHeight, document.documentElement.clientHeight); 
+			}
+			return clientHeight;
+		}
+		// 获取文档完整的高度 
+		function getScrollHeight() { 
+			return Math.max(document.body.scrollHeight, document.documentElement.scrollHeight); 
+		}
+		var _text = document.querySelector('.refreshText_bottom'),
+		_container = document.getElementById('refreshContainer');
+		var throttle = function(method, context){
+			clearTimeout(method.tId);
+			method.tId = setTimeout(function(){
+				method.call(context);
+			}, 300);
+		}
+		// 数据的请求加载
+		function fetchData() {
+			setTimeout(function() {
+				_container.insertAdjacentHTML('beforeend', '<li>new add...</li>');
+			}, 1000);
+		}
+		window.onscroll = function() {
+			if (getScrollTop() + getClientHeight() == getScrollHeight()) {
+				_text.innerText = '加载中...';
+				throttle(fetchData);
+			}
+		};
+	})(window);
+
+
+</script>
+</body>
+</html>
